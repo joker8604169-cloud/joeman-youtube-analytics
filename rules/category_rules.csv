@@ -1,0 +1,15 @@
+priority,category,match_field,keywords
+10,電競賽事,title,SPL|IEM|KeSPA|WCS|MLG|Starcraft|星海|SC2|Game1|Game2|Game3|Game4|Game5|電競|TCL|NSSL|TYSL|BlizzCon|表演賽|對抗賽|明星賽|天梯|總決賽|八強|16強|微星盃|曜越號|\(P\)|\(T\)|\(Z\)|Game-1|Game-2|Game-3
+20,看房/房產,title,看房|豪宅|房地產|買房|租房|億的房|陶朱隱園|建案|房價
+25,汽車,title,超跑|藍寶堅尼|Lamborghini|保時捷|Porsche|法拉利|Ferrari|麥拉倫|McLaren|試駕|新車|F1|賽道|賓士|BMW|特斯拉|Tesla|停車場|開車
+30,旅遊/航空,title,飛機餐|貴賓室|頭等艙|商務艙|經濟艙|機場|航空|郵輪|之旅|旅遊|飯店開箱|環遊|獨旅
+40,美食,title,美食|吃到飽|夜市|拉麵|壽司|牛排|食記|漢堡|珍奶|便當|餐廳|小吃|吃貨|吃播|好吃|好喝|奶茶|海底撈|伴手禮|咖啡|披薩|火鍋|燒肉|甜點|蛋糕|巧克力|吐司
+50,財經/投資,title,加密貨幣|比特幣|以太幣|股票|投資|理財|NFT|虛擬貨幣
+60,玩具/收藏,title,轉蛋|扭蛋|夾娃娃|公仔|模型|樂高|販賣機|盲盒|收藏
+70,寵物,title,貓咪|貓貓|喵喵|咪妃
+80,人物/訪談,title,網紅|Youtuber|訪談|專訪|觀察室|九件事|脫口秀|來聊聊|人物誌
+90,挑戰/企劃,title,挑戰|對決|24小時|48小時|一週|七天|實驗|體驗|一日|實測
+100,3C開箱評測,title,開箱|評測|Unboxing|iPhone|iPad|MacBook|筆電|手機|耳機|相機|鏡頭|電腦|螢幕|鍵盤|滑鼠|Dyson|GoPro|空拍機|充電|處理器|顯卡|智慧型|iOS|AirPods|Airpods|Siri|安卓|Android|晶片|藍牙|平板|摺疊
+110,遊戲實況,title,實況|劇情影片|Walkthrough|攻略|人中之龍|GTA|俠盜獵車手|刀塔|爐石|暴雪英霸|仙劍|俠客風雲傳|武林群俠|秘境探險|Uncharted|絕命異次元|奇妙人生|刺客教條|古墓奇兵|最後生還者|直到黎明|南方公園|監獄建築師|手術模擬|波可龍|進化之地|潛龍諜影|惡靈古堡|量子裂痕|BroForce|垂死之光|遊戲|電玩|Steam|勇者鬥惡龍|創世小玩家|Dragon Quest|星露谷|Stardew|暴雨殺機|Heavy Rain|總統萬歲|Tropico|戰車世界|暗黑破壞神|FFBE|Joeman直播|手遊
+115,人物/訪談,title,ft\.|feat\.|ft |Ft\.
+120,日常Vlog,title,Vlog|日常|工作室|開票|抽獎|直播|住一晚|下班

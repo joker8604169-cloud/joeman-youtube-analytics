@@ -1,0 +1,22 @@
+# 金鑰絕不上傳（雲端執行時改用 GitHub Secrets）
+.env
+
+# 原始 JSON 每日重抓即可取得，體積 12 MB。
+# 若每日提交，一年會讓 repo 膨脹到數 GB，故排除。
+# 注意：data/shorts_check_cache.json 不在此列，它必須保留，
+# 否則每次執行都要重新檢測 400 多支 Shorts。
+data/raw/
+
+# Power BI 檔案為二進位且體積大，不適合版控
+*.pbix
+*.pbit
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 系統
+Thumbs.db
+desktop.ini

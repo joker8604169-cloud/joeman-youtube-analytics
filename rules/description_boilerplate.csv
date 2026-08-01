@@ -1,0 +1,16 @@
+pattern,note
+"^Joeman.{0,20}[:：]\s*https?://",系列播放清單罐頭連結
+"^Joe是要.{0,15}[:：]\s*https?://",系列播放清單罐頭連結
+"^(靈能的挑戰|第九人稱|網紅觀察室|九件事).{0,10}[:：]\s*https?://",系列播放清單罐頭連結
+"(拍攝|收音|燈光|錄影)器材[:：]",器材清單
+"剪接軟體[:：]",器材清單
+"(訂閱|按讚|追蹤)我的",社群罐頭
+"Subscribe now",社群罐頭
+"^(我的|My)(IG|Fb|FB|抖音|推特|threads|Threads|Twitter|Instagram|Facebook)",社群罐頭
+"(FB專頁|Facebook|Twitch|TikTok|tiktok|threads\.net|twitter\.com|instagram\.com)[:：]?\s*https?://",社群罐頭
+"^段落by",剪輯人員署名
+"^\d{1,2}:\d{2}",時間軸章節
+"(工作|商業|合作)(邀約|洽詢)[:：]",聯絡資訊罐頭
+"[\w.-]+@[\w.-]+\.\w+",電子郵件聯絡資訊
+"^更多影片",系列連結區塊標題
+"^(醫美|穿搭|髮量)[:：]\s*https?://www\.youtube\.com",直男改造系列內部連結
