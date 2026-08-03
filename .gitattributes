@@ -1,0 +1,20 @@
+# 換行符正規化
+#
+# pandas 的 to_csv 預設以 os.linesep 寫入：本機（Windows）產出 CRLF、
+# GitHub Actions（Ubuntu）產出 LF。若不統一，同一份資料在兩處執行會讓
+# 整個檔案被判定為變更，git diff 失去意義。
+#
+# 原本靠本機的 core.autocrlf=true 正規化，但那是「機器設定」不是「專案設定」，
+# 換一台電腦 clone 就失效。以下規則綁在專案上。
+
+* text=auto
+
+# 資料與程式一律以 LF 進版控
+*.csv  text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+
+# 背景圖不是文字，禁止任何轉換
+*.png  binary
