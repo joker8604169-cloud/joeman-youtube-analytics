@@ -496,7 +496,8 @@ def write_review_queue(df, playlist_video_map, playlist_rows):
     path = config.PROCESSED_DIR / "review_queue.csv"
     if not rows:
         rows = [{"類型": "無", "項目": "—", "說明": "本次執行未發現需人工檢視的項目"}]
-    pd.DataFrame(rows).to_csv(path, index=False, encoding="utf-8-sig")
+    sanitize_text_columns(pd.DataFrame(rows)).to_csv(
+        path, index=False, encoding="utf-8-sig")
     print(f"已輸出 {path}（待檢視 {len(rows)} 項）")
     for r in rows:
         print(f"  [{r['類型']}] {r['項目']}：{r['說明']}")
@@ -545,6 +546,35 @@ def write_limitations(df, excluded, api_video_count=None):
         path, index=False, encoding="utf-8-sig"
     )
     print(f"已輸出 {path}（限制清單 {len(rows)} 項）")
+
+
+def sanitize_text_columns(df):
+    """輸出前把文字欄位裡的換行與定位字元壓成單一空白。
+
+    YouTube 允許標題含換行（創作者常把雜湊標籤打在第二行），pandas 會依 CSV 標準
+    用雙引號把這種欄位包起來，**檔案本身完全合法**。
+
+    但 Power BI 的「文字/CSV」連接器預設產生 `QuoteStyle=QuoteStyle.None`，
+    那個設定叫它無視雙引號，於是遇到欄位內的換行就硬切成新的一列，
+    造成後續欄位整體位移（症狀：video_id 出現標題碎片、duration_seconds 變成 Error）。
+
+    在輸出端統一清掉，任何下游工具都不會再踩到這個坑。
+
+    ⚠️ 刻意只在寫檔前套用，不動 df 本身——分類與業配判定都拿 title 做正則比對，
+    提前改動可能讓判定結果產生微小差異。這樣可保證輸出的數字與過去完全一致。
+
+    ⚠️ 判斷「是不是文字欄」不能寫 `df[col].dtype == object`。
+    pandas 3.x 起文字欄的 dtype 是 `str` 而非 `object`，那樣寫會讓每一欄都被跳過、
+    函式靜默失效且不報錯——本機（3.x）與 CI（可能是 2.x）行為還會不一致。
+    """
+    out = df.copy()
+    for col in out.columns:
+        if pd.api.types.is_string_dtype(out[col]) or out[col].dtype == object:
+            out[col] = out[col].map(
+                lambda v: re.sub(r"\s*[\r\n\t]+\s*", " ", v).strip()
+                if isinstance(v, str) else v
+            )
+    return out
 
 
 def main():
@@ -609,10 +639,10 @@ def main():
 
     config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     excluded_path = config.PROCESSED_DIR / "excluded_videos.csv"
-    excluded[
+    sanitize_text_columns(excluded[
         ["video_id", "title", "published_at_taipei", "video_format",
          "view_count", "like_count", "comment_count", "exclusion_reason", "url"]
-    ].to_csv(excluded_path, index=False, encoding="utf-8-sig")
+    ]).to_csv(excluded_path, index=False, encoding="utf-8-sig")
     print(f"已輸出 {excluded_path}（{len(excluded)} 筆，保留紀錄以利追溯）")
 
     out_cols = [
@@ -625,7 +655,8 @@ def main():
         "youtube_category_id", "url",
     ]
     videos_path = config.PROCESSED_DIR / "videos.csv"
-    df[out_cols].to_csv(videos_path, index=False, encoding="utf-8-sig")
+    sanitize_text_columns(df[out_cols]).to_csv(
+        videos_path, index=False, encoding="utf-8-sig")
     print(f"已輸出 {videos_path}（{len(df)} 筆）")
 
     # 每日快照：日期取自「原始資料抓取時間」而非執行時間。
