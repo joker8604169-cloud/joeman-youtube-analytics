@@ -67,6 +67,10 @@ SIDE_H = (MAIN_H - GAP) // 2                         # 301
 
 SLICER_Y, SLICER_H = 902, 130
 
+# 導覽軌起點：六格各高 96、間隔 152，總跨距 856，
+# 於頂部列以下（84–1080，共 996px）垂直置中 → 84 + (996-856)//2
+RAIL_TOP = 154
+
 TITLE_BAR_H = 76          # 卡片標題列高度
 CONTENT_TOP = 86          # 卡片內容區距卡片頂端的偏移
 CONTENT_TRIM = 96         # 內容區高度 = 卡片高 - 此值
@@ -75,35 +79,74 @@ TITLE = "Joeman 頻道數據分析"
 # 副標題刻意不寫入具體支數或年數：資料每日更新，寫死的數字幾天後就過期。
 # 動態規模由 Power BI 的 DAX 量值呈現。
 SUBTITLE = "解構一個頻道的產能結構、廠商投放與 IP 接棒"
-# 導覽軌只標示四個分析步驟；封面與方法頁不佔軌位（active_rail = -1）
-RAIL_ITEMS = [("1", "產能"), ("2", "投放"), ("3", "偏好"), ("4", "接棒")]
+# 導覽軌涵蓋全部六個內容頁：資料 → 產能 → 投放 → 偏好 → 接棒 → 限制。
+# 原本只列四個分析步驟，但第 2、7 頁同樣有導覽軌卻沒有任何一格會亮，
+# 觀眾看不出自己在哪一頁。封面與結尾頁不畫導覽軌。
+RAIL_ITEMS = [("1", "資料"), ("2", "產能"), ("3", "投放"),
+              ("4", "偏好"), ("5", "接棒"), ("6", "限制")]
 
 # slicers 以 (分組名稱, 容器寬度) 表示；空清單代表該頁無篩選器，
 # 此時圖表區會往下延伸佔用篩選器列的空間。
 PAGES = {
     1: {"layout": "cover"},
-    2: {"layout": "table", "main": "資料特徵與判準"},
+    2: {"layout": "table", "main": "資料特徵與判準", "active_rail": 0},
     3: {
-        "active_rail": 0,
+        "active_rail": 1,
         "kpi": ["影片總數", "長片數", "Shorts 數", "長片中位觀看"],
         "main": "產能結構：長片與 Shorts 的消長",
-        "side_top": "長片中位觀看（2023 年前可比）",
+        # 標題刻意不寫「2023 年前可比」：那是判斷不是事實（見 HANDOFF 第七章第 5 點，
+        # 資料其實支持放寬到 2024），寫死在 PNG 裡會過期。虛線的意義改由卡片內的
+        # 註記文字方塊「虛線：該年份影片仍在累積觀看」說明，該句不含年份、不會過期。
+        "side_top": "長片中位觀看",
         "side_bottom": "內容類型組成變遷",
         # 年份區間用「介於」樣式，需要橫向空間放兩個輸入框＋滑桿，
         # 控制項會擺在標籤右側（見 BUILD.md 第 3 頁），所以這一格要留寬。
         "slicers": [("影片格式", 260), ("觀看數門檻", 480), ("年份區間", 754)],
     },
     4: {
-        "active_rail": 1,
-        "kpi": ["長片業配率", "偵測業配數（下限）", "推估實際業配", "判定精確率"],
+        "active_rail": 2,
+        # KPI 標題必須誠實反映「資料範圍」切換後的狀態（2026-08-04 修正）：
+        #   KPI1「長片業配率」→「業配率」：它會隨切換變成 15.4%（含 Shorts），
+        #     標題寫死「長片」會與內容矛盾；母體由下方的資料範圍膠囊揭露。
+        #   KPI3、KPI4 加「（長片）」：兩者都**不隨切換變動**——推估值用長片召回率
+        #     85.3% 回推（Shorts 只有 14.7%，套用會荒謬），精確率是長片抽樣的固定值。
+        #
+        # 2026-08-05：KPI2 也鎖長片並加標。原本它跟著資料範圍浮動（切「全部」變 397，
+        # 長片 370 ＋ Shorts 27），與 KPI3 的 434（純長片回推）並排會被讀成
+        # 「偵測 397、推估 434，漏 37 支」——那個 37 是假的。
+        # KPI2 與 KPI3 是一對（下限 vs 推估），必須同母體；而 KPI3 只能是長片。
+        # 鎖住之後四格裡只有 KPI1 會隨切換變動，那正是這頁要演的東西，
+        # 且台詞更利：「業配率掉了，但偵測到的業配數一支沒變——變的是分母」。
+        "kpi": ["業配率", "偵測業配數（長片，下限）", "推估實際業配（長片）", "判定精確率（長片）"],
         "main": "業配影片數與業配率",
-        "side_top": "業配與非業配的觀看對照",
-        "side_bottom": "業配影片的類型組成",
-        # 格式篩選器在此頁是論證工具：切換即可展示整體數字被 Shorts 污染
-        "slicers": [("資料範圍", 720), ("年份區間", 480)],
+        # 標題明示統計量與單位：全報表一律用中位數（第七章第 6 點），
+        # 且第 3 頁側上與第 6 頁 KPI 都標了「中位」，這頁不標會不一致；
+        # 「業配影片數」的「數」字則讓橫條上的 224／118 讀得出是支數不是比例。
+        # 兩張側圖固定在長片（視覺層級篩選 video_format = 長片），不隨資料範圍切換，
+        # 所以一併標「（長片）」——切到「全部」時整頁只剩它們維持長片口徑。
+        # 側上圖於 2026-08-05 換題：原本畫「同系列內業配與非業配的中位觀看」，
+        # 那張圖回答的是「廠商挑影片的顆粒度」，屬於第 5 頁（投放偏好）的主題，
+        # 在這頁（投放規模）沒有工作。改畫偵測缺口——這頁最核心的宣稱
+        # 「整體業配率下降是偵測失效造成的」原本只有口白沒有視覺，
+        # 而它同時是全報表「商業分析一律排除 Shorts」的唯一依據。
+        "side_top": "業配偵測缺口（長片與 Shorts）",
+        # 圖例印在標題列右側：Power BI 的圖例會吃掉視覺物件頂端約 30px，
+        # 印在背景則零佔位，且截圖備援也帶得走。
+        "side_top_legend": [("測到", "#A0A0A0"), ("沒測到", "#5C5C5C")],
+        "side_bottom": "業配影片數的類型組成（長片）",
+        # 資料範圍在此頁是論證工具：切換即可展示整體數字被 Shorts 污染。
+        # 系列篩選器於 2026-08-04 為側上圖的演出而加，2026-08-05 又移除：
+        # 改用方案 B 之後圖表預設就攤開四組對照，篩選器沒有工作了——
+        # 四個合格系列本來就全在畫面上，點下去只是放大；而點其他 25 個系列
+        # 會讓 [配對中位觀看] 的 30 支門檻全數回傳 BLANK，**整張圖空白**。
+        # 留一個上台誤觸就開天窗的控制項，換不到任何東西。
+        # 「你只挑對你有利的系列」這個質疑用口白回答即可（另兩個系列是
+        # −16% 與 −10%，方向一致，只是業配各只有 8 支）。
+        # 年份區間需 754px 以上：「介於」樣式的控制項要擺在標籤右側（第 3 頁實測 610px）。
+        "slicers": [("資料範圍", 720), ("年份區間", 834)],
     },
     5: {
-        "active_rail": 2,
+        "active_rail": 3,
         "kpi": ["業配率最高類型", "業配率最低類型", "類型間差距", "樣本數（長片）"],
         "main": "各類型的業配率",
         "side_top": "廠商進場時序",
@@ -113,7 +156,7 @@ PAGES = {
         "slicers": [("系列", 480), ("類型", 480), ("觀看數門檻", 534)],
     },
     6: {
-        "active_rail": 3,
+        "active_rail": 4,
         # KPI4 與側下圖於 2026-08-02 更換（方案丁）：
         # 原本的「新系列業配率 73.7%」與「新系列動能對照」都是比率比較，
         # 自助抽樣 95% 信賴區間跨越零，照本專案標準不能下結論；
@@ -128,7 +171,8 @@ PAGES = {
         "slicers": [("年份區間", 830), ("觀看數門檻", 664)],
     },
     # 限制頁不列入 10 分鐘主流程，作為 Q&A 備用
-    7: {"layout": "table", "main": "本報告的限制"},
+    7: {"layout": "table", "main": "本報告的限制", "active_rail": 5},
+    8: {"layout": "ending"},
 }
 
 
@@ -136,14 +180,39 @@ def font(size, bold=False):
     return ImageFont.truetype(FONT_BOLD if bold else FONT_REG, size, index=0)
 
 
-def card(d, x, y, w, h, title=None):
-    """卡片容器；有 title 時加上標題列與紅色標記"""
+def card(d, x, y, w, h, title=None, legend=None):
+    """卡片容器；有 title 時加上標題列與紅色標記
+
+    legend：[(標籤, 色碼), ...]，畫在標題列右側、由上而下堆疊。
+
+    這是給「圖例必須關掉才放得下長條」的側圖用的靜態圖例。側圖內容區只有
+    205px，Power BI 的圖例會吃掉頂端約 30px，長條被壓到 13px 就開始掉資料標籤。
+    印在背景裡則不佔視覺物件任何像素，而且截圖備援也帶得走。
+    **由上而下的排列刻意對應群組長條由上而下的序列順序**，讀者不必比對顏色。
+    """
     d.rounded_rectangle([x, y, x + w, y + h], radius=17, fill=CARD)
     if title:
         d.rounded_rectangle([x, y, x + w, y + TITLE_BAR_H], radius=17, fill=CARD_HEAD)
         d.rectangle([x, y + TITLE_BAR_H - 17, x + w, y + TITLE_BAR_H], fill=CARD_HEAD)
         d.rectangle([x + 34, y + 24, x + 41, y + 54], fill=RED)
         d.text((x + 56, y + 21), title, font=font(30, True), fill=TXT)
+    if legend:
+        f = font(20)
+        sw, gap, lh = 14, 8, 26
+        block_w = sw + gap + max(f.getbbox(t)[2] for t, _ in legend)
+        lx = x + w - 34 - block_w
+        top = y + (TITLE_BAR_H - lh * len(legend)) // 2
+        # 與標題文字撞在一起會靜默疊字，寧可中止讓人回來縮短標題
+        if title:
+            title_r = x + 56 + font(30, True).getbbox(title)[2]
+            if lx < title_r + 24:
+                raise ValueError(
+                    f"標題與圖例重疊：標題右緣 {title_r}、圖例左緣 {lx}，請縮短標題"
+                )
+        for i, (label, color) in enumerate(legend):
+            ly = top + lh * i
+            d.rectangle([lx, ly + (lh - sw) // 2, lx + sw, ly + (lh + sw) // 2], fill=color)
+            d.text((lx + sw + gap, ly + 1), label, font=f, fill=TXT2)
 
 
 def finish(img, page_no, rows):
@@ -181,6 +250,27 @@ def draw_cover(d, log):
     d.polygon([(cx - 50, cy - 82), (cx + 80, cy), (cx - 50, cy + 82)], fill="#FFFFFF")
 
 
+def draw_ending(d, log):
+    """結尾頁：置中收尾，與封面成對。不放頂部列與導覽軌
+
+    構圖刻意與封面相反——封面是文字靠左、視覺靠右的展開式，
+    結尾是垂直置中的收攏式，讀起來像句號。
+    """
+    cx = W // 2
+
+    # 播放鍵標記：與封面同一個符號但縮小，作為前後呼應
+    d.rounded_rectangle([cx - 80, 320, cx + 80, 430], radius=26, fill=RED)
+    d.polygon([(cx - 20, 348), (cx + 28, 375), (cx - 20, 402)], fill="#FFFFFF")
+
+    d.text((cx, 490), "謝謝聆聽", font=font(96, True), fill=TXT, anchor="ma")
+    d.rectangle([cx - 120, 645, cx + 120, 651], fill=RED)
+
+    # 刻意不放網址或任何數字：結尾頁的作用是收束，多一行字就多一個
+    # 讓觀眾分心去讀的東西。儲存庫要展示的話在 Q&A 直接開瀏覽器更有力。
+    # 需要在結尾再報一次規模時，可放 [動態資料規模]；不放也成立
+    log("結尾｜動態資料規模（DAX 量值，24px，#717171，選用）", cx - 390, 700, 780, 46)
+
+
 def build(page_no, spec):
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
@@ -192,6 +282,9 @@ def build(page_no, spec):
     layout = spec.get("layout", "standard")
     if layout == "cover":
         draw_cover(d, log)
+        return finish(img, page_no, rows)
+    if layout == "ending":
+        draw_ending(d, log)
         return finish(img, page_no, rows)
 
     # 頂部列
@@ -214,7 +307,7 @@ def build(page_no, spec):
     # 左側導覽軌
     d.line([(RAIL_W, TOPBAR_H), (RAIL_W, H)], fill=LINE, width=2)
     for i, (num, label) in enumerate(RAIL_ITEMS):
-        y = 119 + i * 152
+        y = RAIL_TOP + i * 152
         active = i == spec.get("active_rail", -1)
         if active:
             d.rounded_rectangle([17, y, 141, y + 96], radius=17, fill=CARD_HEAD)
@@ -225,9 +318,13 @@ def build(page_no, spec):
 
     # 表格頁：單張全幅卡片，不放 KPI 列與側圖
     if layout == "table":
+        # 卡片高度沿用標準內容區（252→1032），但表格頁沒有 KPI 列，
+        # 若同樣從 ZONE_Y 起會上方空 168px、下方只剩 48px，整張卡片偏低。
+        # 改為在頂部列以下垂直置中，上下留白各 108px。
         table_h = 1032 - ZONE_Y
-        card(d, CONTENT_X, ZONE_Y, CONTENT_R - CONTENT_X, table_h, spec["main"])
-        log(f"表格｜{spec['main']}", CONTENT_X + 20, ZONE_Y + CONTENT_TOP,
+        table_y = TOPBAR_H + (H - TOPBAR_H - table_h) // 2
+        card(d, CONTENT_X, table_y, CONTENT_R - CONTENT_X, table_h, spec["main"])
+        log(f"表格｜{spec['main']}", CONTENT_X + 20, table_y + CONTENT_TOP,
             CONTENT_R - CONTENT_X - 40, table_h - CONTENT_TRIM)
         return finish(img, page_no, rows)
 
@@ -251,7 +348,8 @@ def build(page_no, spec):
     log(f"主圖表｜{spec['main']}", CONTENT_X + 20, ZONE_Y + CONTENT_TOP,
         MAIN_W - 40, main_h - CONTENT_TRIM)
 
-    card(d, SIDE_X, ZONE_Y, MAIN_W, side_h, spec["side_top"])
+    card(d, SIDE_X, ZONE_Y, MAIN_W, side_h, spec["side_top"],
+         legend=spec.get("side_top_legend"))
     log(f"右上圖｜{spec['side_top']}", SIDE_X + 20, ZONE_Y + CONTENT_TOP,
         MAIN_W - 40, side_h - CONTENT_TRIM)
 

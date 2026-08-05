@@ -69,13 +69,20 @@ def main():
     # 可指定格式，例如：python -m src.sponsor_evaluate Shorts
     # Shorts 與長片的可用文字量差異極大，召回率必須分開量測。
     fmt = sys.argv[1] if len(sys.argv) > 1 else None
-    recall_file = ("sponsor_recall_sample_shorts.csv" if fmt == "Shorts"
+    # 每種格式對應自己的抽樣檔：長片 → _長片、Shorts → _shorts。
+    # 不帶參數時讀的 sponsor_recall_sample.csv 是 2026 年初抽的**混合格式**樣本
+    # （25 Shorts ＋ 14 長片），算出來的召回率不屬於任何單一格式，見下方警語。
+    recall_file = (f"sponsor_recall_sample_{fmt.lower()}.csv" if fmt
                    else "sponsor_recall_sample.csv")
 
     videos = pd.read_csv(config.PROCESSED_DIR / "videos.csv", encoding="utf-8-sig")
     if fmt:
         videos = videos[videos["video_format"] == fmt]
         print(f"限定格式：{fmt}")
+    else:
+        print("⚠️  未指定格式：母體與抽樣皆為長片＋Shorts 混合，")
+        print("    算出的召回率不可標示為任何單一格式的數值。")
+        print("    要長片的數字請執行：python -m src.sponsor_evaluate 長片\n")
     recent = videos[videos["published_year"] >= START_YEAR]
     n_pos = int(recent["is_sponsored"].sum())
     n_neg = len(recent) - n_pos

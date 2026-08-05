@@ -38,18 +38,35 @@ START_YEAR = 2023
 
 def main():
     fmt = sys.argv[1] if len(sys.argv) > 1 else None
-    suffix = f"_{fmt.lower()}" if fmt else ""
+
+    # 🔴 不帶參數時 suffix 為空，輸出檔名就是 sponsor_recall_sample.csv，
+    # 會直接覆蓋既有的人工標記——那是花時間標出來的永久資產，覆蓋掉無法復原。
+    # 而且不指定格式抽出來的是混合樣本（長片與 Shorts 的可用文字量差十倍），
+    # 算出的召回率不屬於任何單一格式。一律要求指定格式。
+    if fmt is None:
+        raise SystemExit(
+            "必須指定格式：\n"
+            "  python -m src.sponsor_sample_recall 長片\n"
+            "  python -m src.sponsor_sample_recall Shorts\n"
+            "不帶參數會寫入 sponsor_recall_sample.csv，覆蓋既有的人工標記（永久資產）。"
+        )
+    suffix = f"_{fmt.lower()}"
 
     df = pd.read_csv(config.PROCESSED_DIR / "videos.csv", encoding="utf-8-sig")
     recent = df[df["published_year"] >= START_YEAR]
-    if fmt:
-        recent = recent[recent["video_format"] == fmt]
-        print(f"限定格式：{fmt}")
+    recent = recent[recent["video_format"] == fmt]
+    print(f"限定格式：{fmt}")
     pool = recent[recent["is_sponsored"] == False].copy()
 
-    # 排除第一份抽樣已核對過的影片，避免重複勞動
-    prev_path = config.PROCESSED_DIR / "sponsor_review_sample.csv"
-    if prev_path.exists():
+    # 排除所有已核對過的影片，避免重複勞動。
+    # 原本只排除 sponsor_review_sample，漏掉既有的漏抓率抽樣檔。
+    for prev_name in ("sponsor_review_sample.csv",
+                      "sponsor_recall_sample.csv",
+                      "sponsor_recall_sample_shorts.csv",
+                      f"sponsor_recall_sample{suffix}.csv"):
+        prev_path = config.PROCESSED_DIR / prev_name
+        if not prev_path.exists():
+            continue
         for enc in ("utf-8-sig", "cp950"):
             try:
                 prev = pd.read_csv(prev_path, encoding=enc)
@@ -58,7 +75,8 @@ def main():
                 continue
         before = len(pool)
         pool = pool[~pool["video_id"].isin(prev["video_id"])]
-        print(f"排除第一份抽樣已核對的 {before - len(pool)} 支")
+        if before - len(pool):
+            print(f"排除 {prev_name} 已核對的 {before - len(pool)} 支")
 
     print(f"未判定為業配的母體：{len(pool)} 支（{START_YEAR} 年起）")
     n = min(SAMPLE_SIZE, len(pool))
