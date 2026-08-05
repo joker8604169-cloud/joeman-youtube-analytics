@@ -20,3 +20,6 @@ venv/
 # 系統
 Thumbs.db
 desktop.ini
+
+# Word／Excel 開啟中產生的暫存鎖定檔（檔案關掉就會消失，不可入版控）
+~$*
