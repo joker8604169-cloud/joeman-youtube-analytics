@@ -84,7 +84,7 @@
 |---|---|
 | **Power BI 實作** | 🎉 **八頁全部完工並驗證**（七頁報表 ＋ 第 8 頁結尾頁） |
 | 資料抓取（`src/fetch.py`） | 約 3,507 支影片、81 個播放清單，配額 235/10,000 |
-| 資料清洗分類（`src/transform.py`） | 24 欄輸出，8 個規則表 |
+| 資料清洗分類（`src/transform.py`） | 24 欄輸出，7 個規則表 |
 | 業配判定與人工驗證 | **分格式各抽 40 支純隨機核對**（2026-08-05 重測，見第八章） |
 | GitHub 部署 | 每日 06:00 自動更新；2026-08-05 手動觸發驗證通過 |
 | Power BI 資料來源 | 已切換為 GitHub raw 網址，不再讀本機路徑 |
@@ -151,8 +151,8 @@
 │   ├── sponsor_sample.py      業配抽樣（分層，測精確率）
 │   ├── sponsor_sample_recall.py  漏抓率抽樣（純隨機，可指定格式）
 │   ├── sponsor_evaluate.py    準確度評估（Wilson 信賴區間）
-│   └── make_background.py     產生 7 頁背景圖與座標表
-├── rules/                     8 個規則表（皆為 CSV，可直接編輯）
+│   └── make_background.py     產生 8 頁背景圖與座標表
+├── rules/                     7 個規則表（皆為 CSV，可直接編輯）
 ├── assets/                    背景圖 PNG ＋ 座標表 CSV
 └── data/
     ├── raw/                   API 原始 JSON（12 MB，不入版控）
@@ -166,7 +166,7 @@ python -m src.fetch                      # 抓取（235 units）
 python -m src.transform                  # 清洗（不需 API）
 python -m src.sponsor_evaluate           # 長片準確度
 python -m src.sponsor_evaluate Shorts    # Shorts 準確度
-python -m src.make_background            # 全部 7 頁背景圖
+python -m src.make_background            # 全部 8 頁背景圖
 python -m src.make_background 4          # 只產生第 4 頁
 ```
 
@@ -254,7 +254,7 @@ python -m src.make_background 4          # 只產生第 4 頁
 
 ---
 
-## 六、規則系統（8 個表，全部在 `rules/`）
+## 六、規則系統（7 個表，全部在 `rules/`）
 
 | 檔案 | 用途 |
 |---|---|
