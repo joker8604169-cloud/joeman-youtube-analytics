@@ -145,30 +145,58 @@
 ├── HANDOFF.md                 本文件
 ├── .github/workflows/
 │   └── daily-update.yml       每日 06:00（台灣時間）自動執行
+├── STAR_SCHEMA.md             ⭐ 星狀模型設計與資料清洗規則（2026-08-10 新增）
+├── DAX_星狀模型.md            ⭐ 量值改寫（取代 DAX.md 第二、三節）
 ├── src/
 │   ├── fetch.py               API 抓取，原始 JSON 落地
 │   ├── transform.py           清洗、分類、輸出全部 CSV
+│   ├── build_star.py          ⭐ 資料清洗 ＋ 拆分事實表／維度表
+│   ├── verify_star.py         ⭐ 驗收：新舊模型逐項比對
 │   ├── sponsor_sample.py      業配抽樣（分層，測精確率）
 │   ├── sponsor_sample_recall.py  漏抓率抽樣（純隨機，可指定格式）
 │   ├── sponsor_evaluate.py    準確度評估（Wilson 信賴區間）
 │   └── make_background.py     產生 8 頁背景圖與座標表
-├── rules/                     7 個規則表（皆為 CSV，可直接編輯）
+├── rules/                     8 個規則表（皆為 CSV，可直接編輯）
 ├── assets/                    背景圖 PNG ＋ 座標表 CSV
 └── data/
     ├── raw/                   API 原始 JSON（12 MB，不入版控）
     └── processed/             分析輸出
+        └── star/              ⭐ Power BI 星狀模型（2 事實表 ＋ 6 維度表）
 ```
+
+### 🔴 2026-08-10：模型改為星狀結構
+
+Power BI **不再讀 `videos.csv`**，改讀 `data/processed/star/` 的事實表與維度表。
+
+**判定邏輯完全沒有動**——`transform.py` 一行沒改、`videos.csv` 一格沒變、
+七張判定規則表原封不動。新增的是 `transform` 之後的**建模層**：
+
+```
+raw JSON ─[transform]→ videos.csv ─[build_star]→ star/*.csv
+                            ↑
+                    抽樣驗證程式仍讀這一份
+```
+
+`videos.csv` 保留是因為三支抽樣程式以它為輸入，而抽樣結果是永久資產。
+
+改了什麼、為什麼改、Power BI 怎麼載入 → **`STAR_SCHEMA.md`**
+44 個量值怎麼改寫、5 個「照抄會算錯」的地方、量值使用狀態盤點 → **`DAX_星狀模型.md`**
 
 ### 執行方式
 
 ```bash
 python -m src.fetch                      # 抓取（235 units）
 python -m src.transform                  # 清洗（不需 API）
+python -m src.build_star                 # 資料清洗 ＋ 星狀重建
+python -m src.verify_star                # 驗收（不符即以非零狀態碼結束）
 python -m src.sponsor_evaluate           # 長片準確度
 python -m src.sponsor_evaluate Shorts    # Shorts 準確度
 python -m src.make_background            # 全部 8 頁背景圖
 python -m src.make_background 4          # 只產生第 4 頁
 ```
+
+⚠️ **只調整模型時不要跑 `transform`**（本機 `data/raw` 會過期，重跑會讓資料回滾，
+見第十三章第 10 點）。直接跑 `build_star` 與 `verify_star` 即可。
 
 ### 兩個執行上的限制
 

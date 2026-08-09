@@ -33,6 +33,15 @@ jobs:
       - name: 清洗與分類
         run: python -m src.transform
 
+      - name: 建立星狀模型（資料清洗與維度建模）
+        run: python -m src.build_star
+
+      # 逐列比對星狀模型與 videos.csv、逐項比對 30+ 個指標，
+      # 並靜態檢查 DAX_星狀模型.md 引用的每個資料行是否存在。
+      # 🔴 這一步失敗就不會提交——寧可停在舊資料，也不要推一份數字對不上的模型。
+      - name: 驗證星狀模型與舊模型等價
+        run: python -m src.verify_star
+
       - name: 提交更新
         run: |
           git config user.name "github-actions[bot]"
